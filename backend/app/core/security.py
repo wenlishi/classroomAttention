@@ -1,13 +1,13 @@
 from datetime import datetime,timedelta,timezone
 from typing import Optional 
 from jose import JWTError,jwt
-from passlib.context import CryptContex1t
+from passlib.context import CryptContext
 
 from app.core.config import settings
 
 # 创建一个密码上下文，用于哈希和验证密码
 # 我们使用 bcrypt 算法
-pwd_context = CryptContex1t(schemes=["bycrypt"],deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str)-> bool:
     """验证明文密码和哈希密码是否匹配"""

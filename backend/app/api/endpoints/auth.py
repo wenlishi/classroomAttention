@@ -1,3 +1,8 @@
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', '..'))
+print(project_root)
+sys.path.insert(0, project_root)
 from fastapi import APIRouter,Depends,HTTPException,status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -5,7 +10,9 @@ from sqlalchemy.orm import Session
 from app.db import models, database
 from app.schemas import user as user_schema
 from app.core import security 
-from app.api.deps import get_db 
+from app.api.deps import get_db
+
+
 
 # 创建一个API路由器的实例
 router = APIRouter()
@@ -26,7 +33,7 @@ def register_user(
     - 返回创建后的用户信息 (不含密码).
     """
     #1. 检查数据库中是否已存在该用户
-    db_user = db.query(models.User).filter(models.User.username == user_in.username)
+    db_user = db.query(models.User).filter(models.User.username == user_in.username).first()
     if db_user:
         raise HTTPException(
             status_code = status.HTTP_400_BAD_REQUEST,
@@ -40,7 +47,7 @@ def register_user(
 
     db_user = models.User(
         username=user_in.username,
-        hashed_password=hashed_password
+        hash_password=hashed_password
     )
 
     # 4. 存入数据库
@@ -66,9 +73,10 @@ def login_for_access_token(
     - 成功后创建并返回一个access token.
     """
      # 1.在数据库中通过用户名查找用户
-    user = db.query(models.User).filter(models.User.username == form_data.username)
+    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    
      # 2.验证用户是否存在以及密码是否正确
-    if not user or not security.verify_password(form_data.password, user.hashed_password):
+    if not user or not security.verify_password(form_data.password, user.hash_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户名或者密码不正确",
@@ -79,4 +87,7 @@ def login_for_access_token(
     access_token = security.create_access_token(data={"sub":user.username})
     return access_token
 
+
+
+print(router)
    
