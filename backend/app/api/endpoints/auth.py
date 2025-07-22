@@ -77,7 +77,7 @@ def login_for_access_token(
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     
      # 2.验证用户是否存在以及密码是否正确
-    if not user or not security.verify_password(form_data.password, user.hash_password):
+    if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户名或者密码不正确",
@@ -86,9 +86,7 @@ def login_for_access_token(
     # 3.创建JWT
     # JWT的"subject" (sub)通常用来存放用户的唯一标识符
     access_token = security.create_access_token(data={"sub":user.username})
-    return access_token
+    # 正确的返回方式：返回一个符合 `Token` schema 的字典
+    return {"access_token": access_token, "token_type": "bearer"}
 
-
-
-print(router)
    
