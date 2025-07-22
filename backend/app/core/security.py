@@ -28,3 +28,21 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp":expire})
     encode_jwt = jwt.encode(to_encode,settings.SECRET_KEY,algorithm=settings.ALGORITHM)
     return encode_jwt
+
+
+
+def decode_access_token(token: str):
+    """
+    解码 access token.
+    :param token: a JWT token.
+    :return: a username if token is valid, None otherwise.
+    """
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            return None
+        return username 
+    except JWTError:
+        return  None
+    

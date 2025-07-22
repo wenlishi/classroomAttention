@@ -1,4 +1,5 @@
 import datetime
+import enum
 from sqlalchemy import (Integer, 
                         String,
                         Column,
@@ -11,6 +12,30 @@ from sqlalchemy.orm import relationship
 
 from .database import Base
 
+
+# ===================================================================
+# 1. 将所有枚举类型提取为独立的 Python Enum 类
+# 继承 str 是为了让 Pydantic 和 FastAPI 能将它们序列化为字符串
+# ===================================================================
+ 
+class UserRole(str, enum.Enum):
+    TEACHER = "teacher"
+    ADMIN = "admin"
+ 
+class SessionType(str, enum.Enum):
+    OFFLINE = "offline"
+    REALTIME = "realtime"
+ 
+class SessionStatus(str, enum.Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+ 
+class AttentionStatus(str, enum.Enum):
+    HEAD_UP = "head_up"
+    HEAD_DOWN = "head_down"
+
 class User(Base):
     __tablename__ = "users"
 
@@ -18,7 +43,7 @@ class User(Base):
     username = Column(String, unique=True, index=True,nullable=False)
     hashed_password = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
-    role = Column(String, nullable=False, default="teacher")
+    role = Column(SQLAlchemyEnum(UserRole, name="user_enum"), default=UserRole.TEACHER, nullable=False)
     is_active = Column(Boolean, default=True) # 默认新用户是激活状态
     created_at = Column(DateTime, default=datetime.datetime.now())
     #关系： 一个用户（教师）可以创建多个课堂会话
@@ -35,8 +60,9 @@ class ClassSession(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_name = Column(String, index=True, nullable=False)
-    session_type = Column(SQLAlchemyEnum("offline", "realtime", name="session_type_enum"), nullable=False)
-    session_status = Column(SQLAlchemyEnum("pending", "processing", "completed", "failed", name="session_status_enum"), nullable=False, default="pending")
+    session_type = Column(SQLAlchemyEnum(SessionType, name="session_type_enum"), nullable=False)
+    # 使用 SessionStatus 枚举
+    session_status = Column(SQLAlchemyEnum(SessionStatus, name="session_status_enum"), nullable=False, default=SessionStatus.PENDING)
     start_time = Column(DateTime, default=datetime.datetime.now())
     end_time = Column(DateTime, nullable=True)
 
@@ -72,8 +98,7 @@ class AttentionLog(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     timestamp = Column(Float, nullable=False) # 视频中的秒数或实时会话的时间戳
-    attention_status = Column(SQLAlchemyEnum("head_up","head_down", name="attention_status_enum"), nullable=False)
-    
+    attention_status = Column(SQLAlchemyEnum(AttentionStatus, name="attention_status_enum"), nullable=False)
     # 外键： 关联是哪一次的会话
     session_id = Column(Integer, ForeignKey("class_sessions.id"), nullable=False)
     
@@ -96,3 +121,5 @@ class AttentionReport(Base):
     session_id = Column(Integer, ForeignKey("class_sessions.id"), nullable=False)
 
     session = relationship("ClassSession", back_populates="reports")
+
+

@@ -62,6 +62,7 @@ def create_analysis_task(db: Session, session_id: int, video_path: str)->models.
     db.commit()
     db.refresh(db_task)
     return db_task
+
 def get_sessions_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100):
     """根据用户的id获取其创建的所有的课程会话"""
     return db.query(models.ClassSession).filter(models.ClassSession.owner_id == user_id).offset(skip).limit(limit).all()
@@ -69,3 +70,24 @@ def get_sessions_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 
 def get_session(db: Session, session_id: int):
     """根据id获取单个课程会话"""
     return db.query(models.ClassSession).filter(models.ClassSession.id == session_id).first()
+
+def get_user(db: Session, user_id: int) -> models.User | None:
+    """
+    根据用户ID从数据库中获取单个用户。
+    """
+    return db.query(models.User).filter(models.User.id == user_id).first()
+ 
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[models.User]:
+    """
+    从数据库中获取一个用户列表，支持分页。
+    """
+    return db.query(models.User).offset(skip).limit(limit).all()
+ 
+# 这是您已经有的函数，放在这里保持完整性
+def update_user_is_active(db: Session, *, user: models.User, is_active: bool) -> models.User:
+    """更新指定用户的 is_active 状态"""
+    user.is_active = is_active
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user

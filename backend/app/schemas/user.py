@@ -53,6 +53,7 @@ class UserCreate(UserBase):
 # 用于从数据库读取数据时的基类
 class UserInDBBase(UserBase):
     id: int
+    is_active: bool
     model_config = ConfigDict(from_attributes=True)
 
 # 用于API响应的模型 (输出)
