@@ -1,9 +1,16 @@
-from pydantic import BaseModel,ConfigDict
+import enum
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional
+
+# 1. 创建一个角色枚举类
+class UserRole(str, enum.Enum):
+    TEACHER = "teacher"
+    # 如果未来有其他角色，比如 admin，可以加在这里
+    ADMIN = "admin"
 
 #Token相关的Schema
 class Token(BaseModel):
-    access_token: str 
+    access_token: str
     token_type: str
 
 class TokenData(BaseModel):
@@ -13,6 +20,8 @@ class TokenData(BaseModel):
 # 这是所有User模型的基类，包含通用字段
 class UserBase(BaseModel):
     username: str
+    email: EmailStr # 使用EmailStr可以自动验证邮件格式
+    role: UserRole = UserRole.TEACHER  # 提供了默认值
 
 # 用于创建用户时接收的数据 (输入)
 # 需要密码

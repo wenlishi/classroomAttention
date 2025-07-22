@@ -26,7 +26,7 @@ def register_user(
 ):
     """
     创建新用户.
-    - 接收用户名和密码.
+    - 接收用户名和密码邮箱和角色.
     - 检查用户名是否已存在.
     - 对密码进行哈希处理.
     - 将新用户存入数据库.
@@ -44,10 +44,10 @@ def register_user(
     hashed_password = security.get_password_hash(user_in.password)
 
     # 3.创建数据库模型实例
-
+    user_data = user_in.model_dump(exclude={"password"})
     db_user = models.User(
-        username=user_in.username,
-        hash_password=hashed_password
+        **user_data,
+        hashed_password = hashed_password
     )
 
     # 4. 存入数据库
@@ -56,6 +56,7 @@ def register_user(
     db.refresh(db_user) # 刷新实例以从数据库获取ID等信息 
 
     return db_user
+
 
 # ---用户登录端点---
 @router.post("/token",response_model=user_schema.Token)
