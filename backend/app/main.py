@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import auth
+from app.api.endpoints import auth, sessions
 from app.db import database, models
 
 
@@ -16,4 +16,5 @@ app.add_middleware(
 )
 
 # 包含WebSocket路由
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])

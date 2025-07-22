@@ -3,6 +3,7 @@ from sqlalchemy import (Integer,
                         String,
                         Column,
                         DateTime,
+                        Boolean,
                         Float,
                         ForeignKey,
                         Enum as SQLAlchemyEnum,)
@@ -18,6 +19,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     role = Column(String, nullable=False, default="teacher")
+    is_active = Column(Boolean, default=True) # 默认新用户是激活状态
     created_at = Column(DateTime, default=datetime.datetime.now())
     #关系： 一个用户（教师）可以创建多个课堂会话
     sessions = relationship("ClassSession", back_populates="owner")

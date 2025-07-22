@@ -52,7 +52,7 @@ def create_class_session(db: Session, session: session_schema.SessionCreate, own
     return db_session
 
 
-def create_analysis_task(db: Session, session_id: int, video_path: str)->models.Analysistask:
+def create_analysis_task(db: Session, session_id: int, video_path: str)->models.AnalysisTask:
     """為离线分析模式创建一个任务记录"""
     db_task = models.AnalysisTask(
         session_id=session_id,
