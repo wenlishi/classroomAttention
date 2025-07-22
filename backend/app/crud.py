@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from app.db import models
 from app.schemas import user as user_schema
+from app.schemas import session as session_schema
 from app.core import security
 
 
@@ -38,3 +39,33 @@ def authenticate_user(db: Session, username: str, password: str):
         return None
     return user
 
+def create_class_session(db: Session, session: session_schema.SessionCreate, owner_id: str )->models.ClassSession:
+    """在数据库中创建一条新的课堂会话记录"""
+    session_data = session.model_dump()
+    db_session = models.ClassSession(
+        **session_data,
+        owner_id=owner_id
+    )
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    return db_session
+
+
+def create_analysis_task(db: Session, session_id: int, video_path: str)->models.Analysistask:
+    """為离线分析模式创建一个任务记录"""
+    db_task = models.AnalysisTask(
+        session_id=session_id,
+        video_path=video_path
+    )
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+def get_sessions_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    """根据用户的id获取其创建的所有的课程会话"""
+    return db.query(models.ClassSession).filter(models.ClassSession.owner_id == user_id).offset(skip).limit(limit).all()
+
+def get_session(db: Session, session_id: int):
+    """根据id获取单个课程会话"""
+    return db.query(models.ClassSession).filter(models.ClassSession.id == session_id).first()
