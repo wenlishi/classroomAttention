@@ -1,6 +1,8 @@
 import enum
-from pydantic import BaseModel, ConfigDict, EmailStr
-from typing import Optional
+import re
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
+from typing import Optional, List
+from .session import Session
 
 # 1. 创建一个角色枚举类
 class UserRole(str, enum.Enum):
@@ -28,13 +30,37 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+    # 2. 定义一个更强大的密码验证器
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        # 'v' 是密码的值
+        if len(v) < 8:
+            raise ValueError("密码长度至少为8个字符")
+            
+        # 3. 使用正则表达式检查复杂度
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("密码必须包含至少一个大写字母")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("密码必须包含至少一个小写字母")
+        if not re.search(r'[0-9]', v):
+            raise ValueError("密码必须包含至少一个数字")
+        if not re.search(r'[@$!%*?&]', v):
+            raise ValueError("密码必须包含至少一个特殊字符 (@$!%*?&)")
+            
+        return v
+
 # 用于从数据库读取数据时的基类
 class UserInDBBase(UserBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
 # 用于API响应的模型 (输出)
-# 注意：这个模型不包含任何敏感信息，如密码哈希
-class UserInDB(UserInDBBase):
+# 不应包含密码
+class User(UserInDBBase):
+    # 关系：一个用户可以有多个会话
+    sessions: List[Session] = []
+ 
+# 用于API响应用户列表时，可以不包含详细的sessions
+class UserSimple(UserInDBBase):
     pass
-    

@@ -10,7 +10,11 @@ from sqlalchemy.orm import Session
 from app.db import models, database
 from app.schemas import user as user_schema
 from app.core import security 
-from app.api.deps import get_db
+from app.deps import get_db
+from app import crud
+
+
+
 
 
 
@@ -18,7 +22,7 @@ from app.api.deps import get_db
 router = APIRouter()
 
 # --- 用户注册端点 --- 
-@router.post("/register", response_model=user_schema.UserInDB,status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=user_schema.UserSimple,status_code=status.HTTP_201_CREATED)
 def register_user(
     *,
     db: Session = Depends(get_db),
@@ -33,29 +37,17 @@ def register_user(
     - 返回创建后的用户信息 (不含密码).
     """
     #1. 检查数据库中是否已存在该用户
-    db_user = db.query(models.User).filter(models.User.username == user_in.username).first()
+    db_user = crud.get_user_by_username(db,username=user_in.username)
+    
     if db_user:
         raise HTTPException(
             status_code = status.HTTP_400_BAD_REQUEST,
             detail="Username already registered",
 
         )
-    # 2.对密码进行哈希处理
-    hashed_password = security.get_password_hash(user_in.password)
+    
+    return crud.create_user(db,user=user_in)
 
-    # 3.创建数据库模型实例
-    user_data = user_in.model_dump(exclude={"password"})
-    db_user = models.User(
-        **user_data,
-        hashed_password = hashed_password
-    )
-
-    # 4. 存入数据库
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user) # 刷新实例以从数据库获取ID等信息 
-
-    return db_user
 
 
 # ---用户登录端点---
@@ -73,8 +65,9 @@ def login_for_access_token(
     - 验证用户凭据.
     - 成功后创建并返回一个access token.
     """
-     # 1.在数据库中通过用户名查找用户
-    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    # 1. 调用 CRUD 函数去验证用户
+    #    注意：它的返回值是 user 对象或者 None，不抛出 HTTP 异常
+    user = crud.authenticate_user(db, username=form_data.username, password=form_data.password)
     
      # 2.验证用户是否存在以及密码是否正确
     if not user or not security.verify_password(form_data.password, user.hashed_password):
