@@ -37,7 +37,7 @@ def get_current_user(
     """
     # 解码token
 
-    username = security.decode_acess_token(token)
+    username = security.decode_access_token(token)
     if not username:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,7 +60,7 @@ def get_current_active_user(current_user: models.User=Depends(get_current_user),
     它只做一件事：检查从token中获取的用户是否处于激活状态。
     """
     if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(status_code=400, detail="未激活的用户")
     return current_user
 
 

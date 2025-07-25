@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app import crud,deps
 from app.db import models
 from app.schemas import session as session_schema
+from app.db.models import SessionType
 
 router = APIRouter()
 
@@ -38,7 +39,7 @@ def create_session_with_video_upload(
         shutil.copyfileobj(video_file.file, buffer)
     
     # 2.在数据库中创建 ClassSession 记录
-    session_create = session_schema.SessionCreate(session_name=session_name, session_type="offline")
+    session_create = session_schema.SessionCreate(session_name=session_name, session_type=SessionType.OFFLINE.value)
     new_session = crud.create_class_session(db=db, session=session_create, owner_id=current_user.id)
 
     # 3.在数据库中创建AnalysisTask 记录，并关联到 session

@@ -24,6 +24,7 @@ def read_users(
     (仅限管理员访问)
     """
     users = crud.get_users(db, skip=skip, limit=limit)
+    return users
     
 
 # 核心功能：更新用户的 is_active 状态

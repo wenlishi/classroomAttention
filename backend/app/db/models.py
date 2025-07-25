@@ -45,7 +45,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     role = Column(SQLAlchemyEnum(UserRole, name="user_enum"), default=UserRole.TEACHER, nullable=False)
     is_active = Column(Boolean, default=True) # 默认新用户是激活状态
-    created_at = Column(DateTime, default=datetime.datetime.now())
+    created_at = Column(DateTime, default=datetime.datetime.now)
     #关系： 一个用户（教师）可以创建多个课堂会话
     sessions = relationship("ClassSession", back_populates="owner")
 
@@ -60,9 +60,9 @@ class ClassSession(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_name = Column(String, index=True, nullable=False)
-    session_type = Column(SQLAlchemyEnum(SessionType, name="session_type_enum"), nullable=False)
+    session_type = Column(SQLAlchemyEnum(SessionType, name="session_type_enum", values_callable=lambda x: [e.value for e in x]), nullable=False)
     # 使用 SessionStatus 枚举
-    session_status = Column(SQLAlchemyEnum(SessionStatus, name="session_status_enum"), nullable=False, default=SessionStatus.PENDING)
+    session_status = Column(SQLAlchemyEnum(SessionStatus, name="session_status_enum", values_callable=lambda x: [e.value for e in x]), nullable=False, default=SessionStatus.PENDING)
     start_time = Column(DateTime, default=datetime.datetime.now())
     end_time = Column(DateTime, nullable=True)
 
@@ -98,7 +98,7 @@ class AttentionLog(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     timestamp = Column(Float, nullable=False) # 视频中的秒数或实时会话的时间戳
-    attention_status = Column(SQLAlchemyEnum(AttentionStatus, name="attention_status_enum"), nullable=False)
+    attention_status = Column(SQLAlchemyEnum(AttentionStatus, name="attention_status_enum", values_callable=lambda x: [e.value for e in x]), nullable=False)
     # 外键： 关联是哪一次的会话
     session_id = Column(Integer, ForeignKey("class_sessions.id"), nullable=False)
     

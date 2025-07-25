@@ -9,6 +9,8 @@ from app.core import security
 def get_user_by_username(db: Session, username: str):
     return db.query(models.User).filter(models.User.username==username).first()
 
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email==email).first()
 
 def create_user(db: Session, user: user_schema.UserCreate):
     """
@@ -41,9 +43,12 @@ def authenticate_user(db: Session, username: str, password: str):
 
 def create_class_session(db: Session, session: session_schema.SessionCreate, owner_id: str )->models.ClassSession:
     """在数据库中创建一条新的课堂会话记录"""
-    session_data = session.model_dump()
     db_session = models.ClassSession(
-        **session_data,
+        session_name=session.session_name,
+        session_type=session.session_type,  # <--- 最关键的修改！提取枚举的值 'offline'
+        # session_status 和 start_time 会由 model 的 default 值自动处理
+        # 如果你的 Pydantic schema 中也定义了 start_time，可以像下面一样加上
+        # start_time=session.start_time, 
         owner_id=owner_id
     )
     db.add(db_session)

@@ -36,15 +36,26 @@ def register_user(
     - 将新用户存入数据库.
     - 返回创建后的用户信息 (不含密码).
     """
+
+    #1. 检查邮箱是否已经存在
+    user_by_email = crud.get_user_by_email(db, email=user_in.email)
+    if user_by_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="邮箱已被使用，换一个试试吧"
+        )
+
+
     #1. 检查数据库中是否已存在该用户
     db_user = crud.get_user_by_username(db,username=user_in.username)
     
     if db_user:
         raise HTTPException(
             status_code = status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered",
+            detail="用户已存在",
 
         )
+    
     
     return crud.create_user(db,user=user_in)
 

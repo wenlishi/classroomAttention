@@ -23,12 +23,14 @@ class TokenData(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: EmailStr # 使用EmailStr可以自动验证邮件格式
-    role: UserRole = UserRole.TEACHER  # 提供了默认值
+    role: UserRole = UserRole.TEACHER # 提供了默认值
 
 # 用于创建用户时接收的数据 (输入)
 # 需要密码
 class UserCreate(UserBase):
     password: str
+    is_active: bool = True
+
 
     # 2. 定义一个更强大的密码验证器
     @field_validator("password")
