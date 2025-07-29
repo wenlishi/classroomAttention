@@ -80,4 +80,18 @@ def get_current_admin_user(
         )
     return current_user
 
+
+
+def get_session_by_id_for_owner(
+        session_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_active_user),    
+)-> models.ClassSession:
+    session = crud.get_session(db, session_id=session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return session
+
     

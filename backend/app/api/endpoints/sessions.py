@@ -62,3 +62,29 @@ def read_sessions(
     """
     sessions = crud.get_sessions_by_user(db, user_id=current_user.id, skip=skip, limit=limit)
     return sessions
+
+@router.get("/{session_id}", response_model=session_schema.Session)
+def read_single_session(
+    *,
+    session: models.ClassSession = Depends(deps.get_session_by_id_for_owner)
+
+):
+    """
+    【新】获取单个会话的详细信息。
+    只有会话的所有者或管理员才能访问。
+    """
+    return session
+
+@router.delete("/{session_id}", response_model=session_schema.Session)
+def delete_single_session(
+    *,
+    db: Session =Depends(deps.get_db),
+    session_to_delete: models.ClassSession = Depends(deps.get_session_by_id_for_owner)
+
+):
+    """
+    删除一个会话。
+    只有会话的所有者才能删除。
+    """
+    deleted_session = crud.delete_session(db=db, db_obj=session_to_delete)
+    return deleted_session

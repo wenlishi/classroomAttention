@@ -123,3 +123,40 @@ class AttentionReport(Base):
     session = relationship("ClassSession", back_populates="reports")
 
 
+
+
+class ClassroomLayout(Base):
+    __tablename__ = "classroom_layouts"
+
+    id = Column(String, index=True, primary_key=True, index=True)
+    name = Column(String, index=True, nullable=False)
+    description = Column(String, nullable=True)
+    background_image_url = Column(String, nullable=True) # 存储图片的访问路径
+    total_rows = Column(Integer, nullable=True)
+    total_cols = Column(Integer, nullable=True)
+
+    owner_id = Column(Integer, ForeignKey("users.id", nullable=False))
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    
+    # 关系: 一个布局对应一个所有者(用户)
+    owner = relationship("User")
+
+     # 关系: 一个布局拥有多个桌子
+    # cascade="all, delete-orphan": 当删除布局时，自动删除所有关联的桌子
+    desks = relationship("Desk", back_populates="layout", cascade="all, delete-orphan")
+
+class Desk(Base):
+    __tablename__ = "desks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    row_num = Column(Integer, nullable=True)
+    col_num = Column(Integer, nullable=True)
+    pos_x = Column(Float, nullable=False)
+    pos_y = Column(Float, nullable=False)
+
+    label = Column(String, nullable=True)
+
+    layout_id = Column(Integer, ForeignKey="classroom_layouts.id", nullable=False)
+
+     # 关系: 一张桌子属于一个布局
+    layout = relationship("ClassroomLayout", back_populates="desks")
