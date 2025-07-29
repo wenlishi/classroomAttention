@@ -48,7 +48,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.now)
     #关系： 一个用户（教师）可以创建多个课堂会话
     sessions = relationship("ClassSession", back_populates="owner")
-
+    layouts = relationship("ClassroomLayout", back_populates="owner", cascade="all, delete-orphan")
 
 class ClassSession(Base):
     """
@@ -68,12 +68,14 @@ class ClassSession(Base):
 
     #外键，关联到创建者（用户）
     owner_id = Column(Integer, ForeignKey("users.id"))
-
+    layout_id = Column(Integer, ForeignKey("classroom_layouts.id"), nullable=True)
+    
     #关系
     owner = relationship("User", back_populates="sessions")
     task = relationship("AnalysisTask", back_populates="session", uselist=False)
     logs = relationship("AttentionLog", back_populates="session")
     reports = relationship("AttentionReport", back_populates="session")
+    layout = relationship("ClassroomLayout")
 
 class AnalysisTask(Base):
     """（离线模式专用）分析任务表，跟踪视频上传和处理的状态"""

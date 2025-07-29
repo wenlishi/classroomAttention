@@ -4,11 +4,13 @@ from typing import Optional, List
 
 # 导入未来的 Report Schema
 from .report import Report
+from .layout import ClassroomLayout
 from app.db.models import SessionType
 
 # 基类，包含了创建和读取时都需要的字段
 class SessionBase(BaseModel):
     session_name: str
+    layout_id: Optional[int] = None
     
 # 创建会话时，API端点需要接收的字段
 class SessionCreate(SessionBase):
@@ -26,5 +28,8 @@ class Session(SessionBase):
 
     # 关系：一个会话有多个分析报告
     reports: List[Report] = []
+    # ↓↓↓ 读取会话详情时，可以完整带出其使用的布局信息
+    layout: Optional[ClassroomLayout] = None
+ 
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,7 +1,10 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 import datetime
+if TYPE_CHECKING:
+    from .session import Session # <--- 只有类型检查时才导入，避免循环
  
+
 # --- Desk Schemas ---
 class DeskBase(BaseModel):
     pos_x: float
@@ -42,6 +45,7 @@ class ClassroomLayout(ClassroomLayoutBase):
     updated_at: datetime.datetime
     # 读取一个完整的布局时，把它的所有桌子信息也一并返回
     desks: List[Desk] = [] 
+     # sessions: List["Session"] = [] # 如果你想查看一个布局被哪些会话使用了，可以加上这个
  
     model_config = {
         "from_attributes": True

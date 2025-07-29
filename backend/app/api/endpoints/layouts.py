@@ -62,3 +62,54 @@ def create_layout(
         image_url=image_url_path # 传入图片URL
     )
     return layout
+
+
+@router.get("/", reponse_model=List[layout_schema.ClassroomLayout])
+def read_my_layouts(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_user),
+)-> Any:
+    """
+    获取当前用户创建的所有教室布局列表。
+    （注：为提高效率，此接口默认不返回每张桌子的详细信息，可在schema中调整）
+    """ 
+    layouts = crud.get_layouts_by_owner(db, owner_id=current_user.id, skip=skip, limit=limit)
+    return layouts
+
+@router.get("/{layout_id}", response_model=layout_schema.ClassroomLayout)
+def read_single_layout(
+    *,
+    db: Session = Depends(deps.get_db),
+    layout_id: int,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    获取单个布局的完整信息，包含其中所有的桌子。
+    """
+    layout = crud.get_layout(db, layout_id=layout_id)
+    if not layout:
+        raise HTTPException(status_code=404, detail="Layout not found")
+    if layout.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return layout
+
+@router.delete("/{layout_id}", response_model=layout_schema.ClassroomLayout)
+def delete_single_layout(
+    *,
+    db: Session = Depends(deps.get_db),
+    layout_id: int,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    删除一个教室布局（其下的所有桌子也会被一并删除）。
+    """
+    layout_to_delete = crud.get_layout(db, layout_id=layout_id)
+    if not layout_to_delete:
+        raise HTTPException(status_code=404, detail="Layout not found")
+    if layout_to_delete.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    deleted_layout = crud.delete_layout(db=db, db_obj=layout_to_delete)
+    return deleted_layout
