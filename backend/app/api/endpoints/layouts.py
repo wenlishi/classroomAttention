@@ -1,8 +1,10 @@
 import shutil
 import uuid
 import json
+import time
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form # 导入File, UploadFile, Form
 
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from typing import List, Any, Optional
 
@@ -32,8 +34,13 @@ def create_layout(
     # 1. 解析JSON字符串为Pydantic模型
     try:
         layout_in = layout_schema.ClassroomLayoutCreate.model_validate_json(layout_data)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid layout data format.")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="The provided layout_data is not a valid JSON.")
+    
+    except ValidationError as e:
+        # 这是最重要的修改！
+        # 它会将详细的字段错误信息返回给前端
+        raise HTTPException(status_code=422, detail=e.errors()) # 422 状态码是“无法处理的实体”
  
     # 2. 如果有文件上传，保存文件并生成URL
     image_url_path = None
@@ -64,7 +71,7 @@ def create_layout(
     return layout
 
 
-@router.get("/", reponse_model=List[layout_schema.ClassroomLayout])
+@router.get("/me", response_model=List[layout_schema.ClassroomLayout]) 
 def read_my_layouts(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -73,8 +80,8 @@ def read_my_layouts(
 )-> Any:
     """
     获取当前用户创建的所有教室布局列表。
-    （注：为提高效率，此接口默认不返回每张桌子的详细信息，可在schema中调整）
     """ 
+    # 这部分代码完全不需要动
     layouts = crud.get_layouts_by_owner(db, owner_id=current_user.id, skip=skip, limit=limit)
     return layouts
 

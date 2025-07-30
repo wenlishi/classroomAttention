@@ -105,7 +105,7 @@ def update_user_is_active(db: Session, *, user: models.User, is_active: bool) ->
 
 
 # --- Layout and Desk CRUD ---
-def get_layout(db: Session, layout_id: int) -> models.ClassroomLayerout | None:
+def get_layout(db: Session, layout_id: int) -> models.ClassroomLayout | None:
     """获取单个布局及其所有桌子 (使用 joinedload 优化)"""
     return (
         db.query(models.ClassroomLayout)
@@ -118,7 +118,7 @@ def get_layouts_by_owner(db: Session, *, owner_id: int, skip: int = 0, limit: in
     """根据所有者ID获取其创建的所有布局列表 (不含桌子详情，仅列表)"""
     return (
         db.query(models.ClassroomLayout)
-        .filter(models.ClassroomLayout.owner_id)
+        .filter(models.ClassroomLayout.owner_id == owner_id)
         .order_by(models.ClassroomLayout.created_at.desc())
         .offset(skip)
         .limit(limit)
@@ -128,25 +128,43 @@ def get_layouts_by_owner(db: Session, *, owner_id: int, skip: int = 0, limit: in
 def create_layout_with_desks(db: Session, *, layout_in: layout_schema.ClassroomLayoutCreate, owner_id: int, image_url: Optional[str] = None)-> models.ClassroomLayout:
     """为指定用户创建一个包含多张桌子的新布局"""
     # 1. 创建布局主体
-    layout_data = layout_in.models_dump(exclude={"desks"})
-    db_layout = models.ClassroomLayout(**layout_data, owner_id=owner_id)
+    # 在这里同时排除 "desks" 和 "background_image_url"
+    layout_data = layout_in.model_dump(exclude={"desks", "background_image_url"})
+    # db_layout = models.ClassroomLayout(**layout_data, owner_id=owner_id)
     # ↓↓↓ 将图片URL也加入到创建数据中 ↓↓↓
-    db_layout = models.ClassroomLayout(**layout_data, owner_id=owner_id, background_image_url=image_url)
+    db_layout = models.ClassroomLayout(
+        **layout_data, 
+        owner_id=owner_id, 
+        background_image_url=image_url
+    )
     db.add(db_layout)
-    db.commit() # 提交以获取 db_layout.id
-    db.refresh(db_layout)
- 
-    # 2. 批量创建桌子并关联到新布局
-    desks_data = layout_in.model_dump()["desks"]
-    db_desks = []
-    for desk_data in desks_data:
-        db_desk = models.Desk(**desk_data, layout_id=db_layout.id)
-        db_desks.append(db_desk)
     
-    db.add_all(db_desks)
+    # 3. 使用 db.flush() 将布局对象“预提交”到数据库
+    #    这样做是为了让 SQLAlchemy 能为 db_layout 分配一个 ID (db_layout.id)，
+    #    以便下面的桌子对象可以引用它。但此时事务尚未真正提交。
+    db.flush()
+    
+    # 4. 准备并添加所有桌子对象
+    desks_data = layout_in.model_dump().get("desks", []) # 使用 .get() 更安全
+    
+    if desks_data: # 只有在有桌子数据时才进行处理
+        db_desks = []
+        for desk_data in desks_data:
+            # 创建桌子实例，并使用 db_layout.id 建立外键关联
+            db_desk = models.Desk(**desk_data, layout_id=db_layout.id)
+            db_desks.append(db_desk)
+        
+        db.add_all(db_desks)
+ 
+    # 5. 提交整个事务
+    #    现在，布局和所有关联的桌子会同时被写入数据库。
     db.commit()
+    
+    # 6. 刷新布局对象
+    #    从数据库中重新加载 db_layout 的状态，以获取所有自动生成的字段
+    #    (例如 created_at, updated_at)。
     db.refresh(db_layout)
-
+    
     return db_layout
 
 def delete_layout(db: Session, *, db_obj: models.ClassroomLayout) -> models.ClassroomLayout:

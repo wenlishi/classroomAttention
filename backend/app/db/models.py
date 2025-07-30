@@ -7,6 +7,7 @@ from sqlalchemy import (Integer,
                         Boolean,
                         Float,
                         ForeignKey,
+                        func,
                         Enum as SQLAlchemyEnum,)
 from sqlalchemy.orm import relationship
 
@@ -130,15 +131,16 @@ class AttentionReport(Base):
 class ClassroomLayout(Base):
     __tablename__ = "classroom_layouts"
 
-    id = Column(String, index=True, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True, nullable=False)
     description = Column(String, nullable=True)
     background_image_url = Column(String, nullable=True) # 存储图片的访问路径
     total_rows = Column(Integer, nullable=True)
     total_cols = Column(Integer, nullable=True)
 
-    owner_id = Column(Integer, ForeignKey("users.id", nullable=False))
-    created_at = Column(DateTime, default=datetime.datetime.now)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=False), server_default=func.now())
+    updated_at = Column(DateTime(timezone=False), server_default=func.now(), onupdate=func.now())
     
     # 关系: 一个布局对应一个所有者(用户)
     owner = relationship("User")
@@ -158,7 +160,8 @@ class Desk(Base):
 
     label = Column(String, nullable=True)
 
-    layout_id = Column(Integer, ForeignKey="classroom_layouts.id", nullable=False)
+    layout_id = Column(Integer, ForeignKey("classroom_layouts.id"), nullable=False)
+ 
 
      # 关系: 一张桌子属于一个布局
     layout = relationship("ClassroomLayout", back_populates="desks")

@@ -42,7 +42,7 @@ class ClassroomLayout(ClassroomLayoutBase):
     id: int
     owner_id: int
     created_at: datetime.datetime
-    updated_at: datetime.datetime
+    #updated_at: datetime.datetime
     # 读取一个完整的布局时，把它的所有桌子信息也一并返回
     desks: List[Desk] = [] 
      # sessions: List["Session"] = [] # 如果你想查看一个布局被哪些会话使用了，可以加上这个
