@@ -62,7 +62,7 @@ def read_users_me(
 ):
     """
     获取当前登录用户的信息。
-    这个端点受 security.get_current_active_user 依赖项保护，
+    这个端点受 deps.get_current_active_user 依赖项保护，
     如果请求中没有有效（未过期）的 HttpOnly cookie，
     FastAPI 会自动返回 401 未授权错误。
     """

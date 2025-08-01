@@ -1,0 +1,28 @@
+@import './base.css';
+
+/* src/assets/main.css */
+
+/* 
+ * 1. 基础重置 (Reset)
+ * 移除浏览器默认的边距，这样你的 100vh 和 100vw 才不会有意外。
+*/
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%; /* 确保根元素高度是100% */
+  width: 100%;  /* 确保根元素宽度是100% */
+}
+
+/*
+ * 2. 清理 #app
+ * 让 #app 继承父级(body)的宽高，完全撑满屏幕。
+ * 删掉所有之前 vue 默认生成的 max-width, margin, padding 等。
+*/
+#app {
+  height: 100%;
+  width: 100%;
+  font-weight: normal; /* 这行可以保留 */
+}
+
+/* 其他你需要的全局样式可以放在下面 */
