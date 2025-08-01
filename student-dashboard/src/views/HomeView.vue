@@ -1,30 +1,7 @@
 <template>
   <div class="home-container">
-    <!-- 左侧侧边栏 -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <span class="logo-icon">🎓</span>
-        <h1 class="sidebar-title">智慧课堂</h1>
-      </div>
-      <nav class="sidebar-nav">
-        <a href="#" class="nav-item active">
-          <span class="nav-icon">📊</span>
-          <span>实时仪表盘</span>
-        </a>
-        <a href="#" class="nav-item">
-          <span class="nav-icon">📈</span>
-          <span>统计报告</span>
-        </a>
-        <a href="#" class="nav-item">
-          <span class="nav-icon">🔔</span>
-          <span>告警中心</span>
-        </a>
-        <a href="#" class="nav-item">
-          <span class="nav-icon">⚙️</span>
-          <span>系统设置</span>
-        </a>
-      </nav>
-    </aside>
+    <!-- [核心修改] 使用我们新创建的 Sidebar 组件 -->
+    <Sidebar />
 
     <!-- 主内容区 -->
     <main class="main-content">
@@ -125,6 +102,10 @@
 </template>
 
 <script setup>
+// [核心修改] 1. 导入新创建的 Sidebar 组件
+// 请确保路径正确，例如 '../components/Sidebar.vue'
+import Sidebar from '../components/Sidebar.vue';
+
 // 这是一个用于布局演示的静态组件。
 // 您可以根据需要在此处添加响应式数据和方法。
 </script>
@@ -138,63 +119,7 @@
   font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* 侧边栏 */
-.sidebar {
-  width: 260px;
-  background-color: #ffffff;
-  border-right: 1px solid #e9ecef;
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2.5rem;
-}
-
-.logo-icon {
-  font-size: 2rem;
-  margin-right: 0.75rem;
-}
-
-.sidebar-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #343a40;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  text-decoration: none;
-  color: #495057;
-  font-weight: 500;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.nav-item:hover {
-  background-color: #f1f3f5;
-}
-
-.nav-item.active {
-  background-color: #4c6ef5;
-  color: white;
-}
-
-.nav-icon {
-  margin-right: 1rem;
-  font-size: 1.2rem;
-}
+/* [已移除] 所有 sidebar 相关的样式都已移动到 Sidebar.vue 文件中 */
 
 /* 主内容区 */
 .main-content {

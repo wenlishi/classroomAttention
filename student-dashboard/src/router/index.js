@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import AuthView from '../views/AuthView.vue'
 // [新增] 1. 从 auth.js 文件中导入全局状态
 import { authState } from '../auth'; // 请确保路径正确
+import LayoutsView from '@/views/LayoutsView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,6 +26,13 @@ const router = createRouter({
       component: AuthView,
       // 标记这个页面只允许未登录的“访客”访问
       meta: { requiresGuest: true }
+    },
+    {
+      path: '/layouts',
+      name: 'layouts',
+      component: LayoutsView,
+      // 标记这个页面只允许未登录的“访客”访问
+      meta: { requiresAuth: true }
     },
     // ... 您其他的路由定义
   ],
