@@ -16,7 +16,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # <-- 使用上面定义的 origins 列表
+    allow_origins=["*"],  # <-- 使用上面定义的 origins 列表
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
