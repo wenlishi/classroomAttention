@@ -10,15 +10,20 @@ app = FastAPI(title="classroom Atttention")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 配置CORS（跨域资源共享），允许前端访问
+origins = [
+    "http://localhost:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ["*"],
+    allow_origins=origins,  # <-- 使用上面定义的 origins 列表
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 # 2. 在这里添加 CORS 中间件配置
 # 如果 settings.BACKEND_CORS_ORIGINS 存在并且已配置, 则使用它
+
 
 
 

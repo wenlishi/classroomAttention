@@ -1,12 +1,15 @@
+import os
 from typing import Generator
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 from app.db.database import SessionLocal
 from app.db import models
 from app.core import security
 from app.db.models import UserRole
 from app import crud
+
 
 
 def get_db():
@@ -24,45 +27,49 @@ def get_db():
 
 # 这个对象会从请求的 Authorization header 中寻找 Bearer Token
 # tokenUrl 指向你的登录接口，FastAPI会在交互式文档中用它来获取token
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/token" 
-)
+# 这个函数将作为我们新的、主要的依赖项
 
-def get_current_user(
-        db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
-): 
+async def get_current_user(
+    request: Request, db: Session = Depends(get_db)
+) -> models.User:
     """
-    解码token以获取用户名，然后从数据库中检索用户。
-    这是获取用户对象的基础依赖，但不检查用户是否激活。
+    从请求的 HttpOnly Cookie 中提取、解码并验证 token，
+    然后返回对应的用户模型。
     """
-    # 解码token
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="无法验证凭证",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    token = request.cookies.get("access_token")
 
+    if token is None:
+        raise credentials_exception
+
+    if token.startswith("Bearer "):
+        token = token.split("Bearer ", 1)[1]
+
+    # [核心修改] 2. 直接调用您的解码函数
     username = security.decode_access_token(token)
     if not username:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"}
-
-        )
-    # 从数据库获取用户
+        raise credentials_exception
+    
     user = crud.get_user_by_username(db, username=username)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="不存在的用户"
-        )
+    if user is None:
+        raise credentials_exception
     return user
- 
-def get_current_active_user(current_user: models.User=Depends(get_current_user),):
+
+# 您的 get_current_active_user 函数现在应该依赖于上面的 get_current_user
+async def get_current_active_user(
+    current_user: models.User = Depends(get_current_user)
+) -> models.User:
     """
-    一个依赖于 get_current_user 的依赖项。
-    它只做一件事：检查从token中获取的用户是否处于激活状态。
+    检查从 token 中获取的用户是否处于激活状态。
     """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="未激活的用户")
     return current_user
-
 
 def get_current_admin_user(
         current_user: models.User = Depends(get_current_active_user),

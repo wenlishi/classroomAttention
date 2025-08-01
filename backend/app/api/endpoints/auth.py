@@ -3,7 +3,7 @@ import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', '..'))
 print(project_root)
 sys.path.insert(0, project_root)
-from fastapi import APIRouter,Depends,HTTPException,status
+from fastapi import Depends, HTTPException, status, Response, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -61,36 +61,69 @@ def register_user(
 
 
 
+# # ---用户登录端点---
+# @router.post("/token",response_model=user_schema.Token)
+# def login_for_access_token(
+#     db: Session = Depends(get_db),
+#     form_data: OAuth2PasswordRequestForm = Depends()
+# ):
+     
+     
+#     """
+#     用户登录以获取JWT.
+#     - 使用 OAuth2PasswordRequestForm 依赖项, 它会从请求体中解析 'username' 和 'password'.
+#     - 前端需要以 'application/x-www-form-urlencoded' 格式发送数据.
+#     - 验证用户凭据.
+#     - 成功后创建并返回一个access token.
+#     """
+#     # 1. 调用 CRUD 函数去验证用户
+#     #    注意：它的返回值是 user 对象或者 None，不抛出 HTTP 异常
+#     user = crud.authenticate_user(db, username=form_data.username, password=form_data.password)
+    
+#      # 2.验证用户是否存在以及密码是否正确
+#     if not user or not security.verify_password(form_data.password, user.hashed_password):
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="用户名或者密码不正确",
+#             headers={"WWW-Authenticate":"Bearer"}# 这是OAuth2.0规范的一部分
+#          )
+#     # 3.创建JWT
+#     # JWT的"subject" (sub)通常用来存放用户的唯一标识符
+#     access_token = security.create_access_token(data={"sub":user.username})
+#     # 正确的返回方式：返回一个符合 `Token` schema 的字典
+#     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
 # ---用户登录端点---
-@router.post("/token",response_model=user_schema.Token)
+@router.post("/token")
 def login_for_access_token(
+    response: Response, # <--- 添加这个
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
-     
-     
-    """
-    用户登录以获取JWT.
-    - 使用 OAuth2PasswordRequestForm 依赖项, 它会从请求体中解析 'username' 和 'password'.
-    - 前端需要以 'application/x-www-form-urlencoded' 格式发送数据.
-    - 验证用户凭据.
-    - 成功后创建并返回一个access token.
-    """
-    # 1. 调用 CRUD 函数去验证用户
-    #    注意：它的返回值是 user 对象或者 None，不抛出 HTTP 异常
+    # ... (您的用户验证逻辑保持不变)
     user = crud.authenticate_user(db, username=form_data.username, password=form_data.password)
-    
-     # 2.验证用户是否存在以及密码是否正确
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户名或者密码不正确",
-            headers={"WWW-Authenticate":"Bearer"}# 这是OAuth2.0规范的一部分
-         )
-    # 3.创建JWT
-    # JWT的"subject" (sub)通常用来存放用户的唯一标识符
+            headers={"WWW-Authenticate":"Bearer"}
+        )
+    
     access_token = security.create_access_token(data={"sub":user.username})
-    # 正确的返回方式：返回一个符合 `Token` schema 的字典
-    return {"access_token": access_token, "token_type": "bearer"}
 
+    # --- [核心修改] ---
+    # 不再在JSON中返回token，而是设置一个HttpOnly Cookie
+    response.set_cookie(
+        key="access_token", 
+        value=f"Bearer {access_token}",
+        httponly=True, # <--- 关键！禁止JS读取
+        samesite='lax', # 防止CSRF攻击
+        secure=False, # 在生产环境中应设为True，只通过HTTPS发送
+        path="/"
+    )
+    
+    # 返回一个成功的消息即可
+    return {"message": "Login successful"}
    

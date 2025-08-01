@@ -53,4 +53,17 @@ def update_user_is_active(
     # 使用 crud 层更新用户
     updated_user = crud.update_user_is_active(db=db, user=user_to_update, is_active=is_active)
     
-    return updated_user 
+    return updated_user
+
+
+@router.get("/me", response_model=user_schema.UserSimple)
+def read_users_me(
+    current_user: user_schema.User = Depends(deps.get_current_active_user)
+):
+    """
+    获取当前登录用户的信息。
+    这个端点受 security.get_current_active_user 依赖项保护，
+    如果请求中没有有效（未过期）的 HttpOnly cookie，
+    FastAPI 会自动返回 401 未授权错误。
+    """
+    return current_user
