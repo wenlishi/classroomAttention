@@ -32,6 +32,8 @@ def create_layout(
     - file: (可选) 一张教室的背景图片。
     """
     # 1. 解析JSON字符串为Pydantic模型
+
+    print(layout_data)
     try:
         layout_in = layout_schema.ClassroomLayoutCreate.model_validate_json(layout_data)
     except json.JSONDecodeError:
